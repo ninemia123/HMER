@@ -351,11 +351,16 @@ function editPrminHours() {
     };
 }
 
+// ΟΡΙΣΜΟΣ ΒΑΡΔΙΩΝ - ΜΕ ΤΙΣ ΝΕΕΣ ΑΛΛΑΓΕΣ
 const SHIFTS = [
     {n:'ΠΡΩΙ', h:6, s:0}, {n:'ΑΠΟΓΕΥΜΑ', h:6, s:0}, {n:'1/2 ΩΡΑΣ', h:0.5, s:0},
-    {n:'ΝΥΧΤΑ', h:6, s:0.6}, {n:'ΑΡΓΙΑ', h:6, s:0.75}, {n:'ΠΕΡΑΝ 5ΗΜ', h:6, s:1.25},
+    {n:'ΝΥΧΤΑ', h:6, s:0.6}, 
+    {n:'ΝΥΧΤΑ Α', h:6, s:0.6},  // Προσθήκη ΝΥΧΤΑ Α - πληρώνεται για 3 ώρες νύχτας
+    {n:'ΝΥΧΤΑ Β', h:6, s:0.6},  // Προσθήκη ΝΥΧΤΑ Β - πληρώνεται για 5 ώρες νύχτας
+    {n:'ΑΡΓΙΑ', h:6, s:0.75}, {n:'ΠΕΡΑΝ 5ΗΜ', h:6, s:1.25},
     {n:'ΠΕΡ.ΑΡΓ.ΠΡΩΙ', h:6, s:1.4}, {n:'ΠΕΡ.ΑΡΓ.ΝΥΧΤ', h:6, s:1.45},
-    {n:'ΥΠΕΡ.ΠΡΩΙ', h:1, s:1.0, isOT:true}, {n:'ΥΠΕΡ.ΝΥΧΤΑ', h:1, s:1.3, isOT:true},
+    {n:'ΥΠΕΡ.ΠΡΩΙ (ΠΙΚΕΤΟ)', h:1, s:1.0, isOT:true},  // Διόρθωση σε ΠΙΚΕΤΟ
+    {n:'ΥΠΕΡ.ΝΥΧΤΑ', h:1, s:1.3, isOT:true},
     {n:'ΕΙΔΙΚΗ ΑΔΕΙΑ', h:6.8, s:0, abs:true}, {n:'ΑΙΜΟΔΟΤΙΚΗ', h:6.8, s:0, abs:true},
     {n:'ΚΑΝ. ΑΔΕΙΑ', h:0, s:0, abs:true}, {n:'ΑΝΑΡΡΩΤΙΚΗ', h:0, s:0, abs:true},
     {n:'ΒΡΑΧΕΙΑ', h:0, s:0, abs:true}, {n:'ΟΦ ΡΕΠΟ', h:8.5, s:0},
@@ -568,6 +573,44 @@ function showTempMessage(msg, duration) {
 
 // ΤΕΛΟΣ ΣΩΣΤΗΣ ΛΟΓΙΚΗΣ
 
+// ΣΥΝΑΡΤΗΣΗ: Υπολογισμός πληρωμής για ΝΥΧΤΑ Α και ΝΥΧΤΑ Β
+function calculateNightPayment(shiftName, actualHours) {
+    const hr = (parseFloat(document.getElementById('salary').value) || 0) / 280;
+    
+    if (shiftName === 'ΝΥΧΤΑ Α') {
+        // Πληρώνεται μόνο για 3 ώρες νύχτας
+        return 3 * hr * 0.6;
+    } else if (shiftName === 'ΝΥΧΤΑ Β') {
+        // Πληρώνεται μόνο για 5 ώρες νύχτας
+        return 5 * hr * 0.6;
+    }
+    
+    // Για κανονική ΝΥΧΤΑ
+    return actualHours * hr * 0.6;
+}
+
+// ΣΥΝΑΡΤΗΣΗ: Υπολογισμός χρημάτων (όπως πριν)
+function recalcMoney(num) {
+    const hr = (parseFloat(document.getElementById('salary').value) || 0) / 280;
+    const h = parseFloat(document.getElementById(`c-h${num}`).value) || 0;
+    const shiftName = document.getElementById(`c-n${num}`).value;
+    
+    let payment = 0;
+    
+    // Ειδική διαχείριση για ΝΥΧΤΑ Α και ΝΥΧΤΑ Β
+    if (shiftName === 'ΝΥΧΤΑ Α') {
+        payment = calculateNightPayment('ΝΥΧΤΑ Α', h);
+    } else if (shiftName === 'ΝΥΧΤΑ Β') {
+        payment = calculateNightPayment('ΝΥΧΤΑ Β', h);
+    } else {
+        // Κανονικός υπολογισμός για όλες τις άλλες βάρδιες
+        const mult = parseFloat(document.getElementById(`c-n${num}`).dataset.mult) || 0;
+        payment = h * hr * mult;
+    }
+    
+    document.getElementById(`c-m${num}`).value = payment.toFixed(2);
+}
+
 function calculate() {
     const y = cur.getFullYear(), m = cur.getMonth(), monthKey = `sal_${y}-${m}`;
     const sal = db[monthKey] || settings.salary, mB = parseFloat(settings.mode), hols = getHols(y);
@@ -623,8 +666,12 @@ function calculate() {
         
         w.days.forEach(day => {
             if (day.s) {
+                // ΟΛΕΣ οι βάρδιες (συμπεριλαμβανομένων ΝΥΧΤΑ Α/Β) προσθέτουν τα μεικτά τους
                 tGross += (day.s.m1 || 0) + (day.s.m2 || 0) + (day.s.m3 || 0);
+                
+                // Προσθήκη ωρών στο σύνολο
                 totalHours += (day.s.h1||0) + (day.s.h2||0) + (day.s.h3||0);
+                
                 let hc = (day.s.isOT1 ? 0 : (day.s.h1||0)) + (day.s.isOT2 ? 0 : (day.s.h2||0)) + (day.s.isOT3 ? 0 : (day.s.h3||0));
                 
                 for (let i = 0; i < Math.round(hc * 10); i++) {
@@ -647,6 +694,18 @@ function calculate() {
     document.getElementById('m-upk').innerText = monthUPK.toFixed(1);
     document.getElementById('m-upa').innerText = monthUPA.toFixed(1);
     document.getElementById('m-peran').innerText = (monthUPK + monthUPA).toFixed(1);
+    
+    // Υπολογισμός τελικών ποσών - ΤΩΡΑ περιλαμβάνει και τα μεικτά από ΝΥΧΤΑ Α/Β
+    let mtpy = tGross * 0.02;
+    let eis = tGross * 0.02;
+    let tax = (tGross - mtpy - eis) * 0.20;
+    let net = tGross - mtpy - eis - tax;
+    
+    document.getElementById('r-gross').innerText = tGross.toFixed(2) + '€';
+    document.getElementById('r-mtpy').innerText = mtpy.toFixed(2) + '€';
+    document.getElementById('r-eis').innerText = eis.toFixed(2) + '€';
+    document.getElementById('r-tax').innerText = tax.toFixed(2) + '€';
+    document.getElementById('r-net').innerText = net.toFixed(2) + '€';
     
     let body = document.getElementById('cal-body'); 
     body.innerHTML = ''; 
@@ -697,13 +756,6 @@ function calculate() {
         }
     });
     
-    let mtpy = tGross * 0.02, eis = tGross * 0.02, tax = (tGross - mtpy - eis) * 0.20;
-    document.getElementById('r-gross').innerText = tGross.toFixed(2) + '€';
-    document.getElementById('r-mtpy').innerText = mtpy.toFixed(2) + '€';
-    document.getElementById('r-eis').innerText = eis.toFixed(2) + '€';
-    document.getElementById('r-tax').innerText = tax.toFixed(2) + '€';
-    document.getElementById('r-net').innerText = (tGross - mtpy - eis - tax).toFixed(2) + '€';
-    
     // Αυτόματος υπολογισμός ρεπό
     calculateRep();
 }
@@ -724,42 +776,138 @@ function renderShifts() {
     const grid = document.getElementById('m-opts'); grid.innerHTML = '';
     SHIFTS.forEach(o => {
         let b = document.createElement('div'); b.className = 'm-btn';
-        let hourlyValue = (hr * o.s).toFixed(2);
-        b.innerHTML = `<span>${o.n}</span> <span style="color:var(--red)">${hourlyValue > 0 ? hourlyValue + '€' : ''}</span>`;
+        
+        // ΕΠΑΝΑΦΟΡΑ: Δείχνει το ωρομίσθιο (όχι το συνολικό ποσό)
+        // Το ωρομίσθιο είναι: (βασικός μισθός / 280) * συντελεστής βάρδιας
+        let hourlyRate = (hr * o.s).toFixed(2);
+        
+        // Ειδική ετικέτα για ΝΥΧΤΑ Α και ΝΥΧΤΑ Β
+        let displayName = o.n;
+        if (o.n === 'ΝΥΧΤΑ Α') {
+            displayName = 'ΝΥΧΤΑ Α (3ω πληρ.)';
+        } else if (o.n === 'ΝΥΧΤΑ Β') {
+            displayName = 'ΝΥΧΤΑ Β (5ω πληρ.)';
+        }
+        
+        b.innerHTML = `<span>${displayName}</span> <span style="color:var(--red)">${hourlyRate > 0 ? hourlyRate + '€' : ''}</span>`;
         b.onclick = () => {
             let t = activeInput; 
             let nameInput = document.getElementById(t);
             nameInput.value = o.n; 
+            
+            // Ορισμός των προτεινόμενων ωρών (6 για όλες τις βάρδιες)
             document.getElementById(t.replace('n', 'h')).value = o.h;
+            
             nameInput.dataset.mult = o.s;
             nameInput.dataset.isot = o.isOT ? "1" : "0";
+            
             recalcMoney(t.slice(-1));
             activeInput = (t === 'c-n1') ? 'c-n2' : (t === 'c-n2' && document.getElementById('div-s3').style.display==='grid' ? 'c-n3' : 'c-n1');
         }; grid.appendChild(b);
     });
 }
 
-function recalcMoney(num) {
-    const hr = (parseFloat(document.getElementById('salary').value) || 0) / 280;
-    const h = parseFloat(document.getElementById(`c-h${num}`).value) || 0;
-    const mult = parseFloat(document.getElementById(`c-n${num}`).dataset.mult) || 0;
-    document.getElementById(`c-m${num}`).value = (h * hr * mult).toFixed(2);
-}
-
 function save() {
+    const hr = (parseFloat(document.getElementById('salary').value) || 0) / 280;
+    
+    // Λήψη τιμών από τα πεδία εισόδου
+    const t1 = document.getElementById('c-n1').value;
+    const h1 = parseFloat(document.getElementById('c-h1').value) || 0;
+    const t2 = document.getElementById('c-n2').value;
+    const h2 = parseFloat(document.getElementById('c-h2').value) || 0;
+    const t3 = document.getElementById('c-n3').value;
+    const h3 = parseFloat(document.getElementById('c-h3').value) || 0;
+    const txt = document.getElementById('c-txt').value;
+    
+    // Υπολογισμός πληρωμής για κάθε βάρδια
+    let m1 = 0, m2 = 0, m3 = 0;
+    
+    // Βάρδια 1
+    if (t1 === 'ΝΥΧΤΑ Α') {
+        m1 = calculateNightPayment('ΝΥΧΤΑ Α', h1);
+    } else if (t1 === 'ΝΥΧΤΑ Β') {
+        m1 = calculateNightPayment('ΝΥΧΤΑ Β', h1);
+    } else if (t1) {
+        const shift1 = SHIFTS.find(s => s.n === t1);
+        if (shift1) {
+            m1 = h1 * hr * shift1.s;
+        }
+    }
+    
+    // Βάρδια 2
+    if (t2 === 'ΝΥΧΤΑ Α') {
+        m2 = calculateNightPayment('ΝΥΧΤΑ Α', h2);
+    } else if (t2 === 'ΝΥΧΤΑ Β') {
+        m2 = calculateNightPayment('ΝΥΧΤΑ Β', h2);
+    } else if (t2) {
+        const shift2 = SHIFTS.find(s => s.n === t2);
+        if (shift2) {
+            m2 = h2 * hr * shift2.s;
+        }
+    }
+    
+    // Βάρδια 3
+    if (t3 === 'ΝΥΧΤΑ Α') {
+        m3 = calculateNightPayment('ΝΥΧΤΑ Α', h3);
+    } else if (t3 === 'ΝΥΧΤΑ Β') {
+        m3 = calculateNightPayment('ΝΥΧΤΑ Β', h3);
+    } else if (t3) {
+        const shift3 = SHIFTS.find(s => s.n === t3);
+        if (shift3) {
+            m3 = h3 * hr * shift3.s;
+        }
+    }
+    
+    // Δημιουργία αντικειμένου βάρδιας
     const s = {
-        t1: document.getElementById('c-n1').value, h1: parseFloat(document.getElementById('c-h1').value) || 0, m1: parseFloat(document.getElementById('c-m1').value) || 0, isOT1: document.getElementById('c-n1').dataset.isot === "1",
-        t2: document.getElementById('c-n2').value, h2: parseFloat(document.getElementById('c-h2').value) || 0, m2: parseFloat(document.getElementById('c-m2').value) || 0, isOT2: document.getElementById('c-n2').dataset.isot === "1",
-        t3: document.getElementById('c-n3').value, h3: parseFloat(document.getElementById('c-h3').value) || 0, m3: parseFloat(document.getElementById('c-m3').value) || 0, isOT3: document.getElementById('c-n3').dataset.isot === "1",
-        txt: document.getElementById('c-txt').value
+        t1: t1,
+        h1: h1,
+        m1: parseFloat(m1.toFixed(2)),
+        isOT1: SHIFTS.find(x => x.n === t1)?.isOT || false,
+        
+        t2: t2,
+        h2: h2,
+        m2: parseFloat(m2.toFixed(2)),
+        isOT2: SHIFTS.find(x => x.n === t2)?.isOT || false,
+        
+        t3: t3,
+        h3: h3,
+        m3: parseFloat(m3.toFixed(2)),
+        isOT3: SHIFTS.find(x => x.n === t3)?.isOT || false,
+        
+        txt: txt
     };
-    s.abs = SHIFTS.find(x => x.n === s.t1)?.abs || SHIFTS.find(x => x.n === s.t2)?.abs || SHIFTS.find(x => x.n === s.t3)?.abs || false;
-    db[selD] = s; localStorage.setItem('exfr_db_v53', JSON.stringify(db)); closeModal(); calculate();
+    
+    // Έλεγχος για απουσία
+    const shift1 = SHIFTS.find(x => x.n === s.t1);
+    const shift2 = SHIFTS.find(x => x.n === s.t2);
+    const shift3 = SHIFTS.find(x => x.n === s.t3);
+    
+    s.abs = shift1?.abs || shift2?.abs || shift3?.abs || false;
+    
+    // Αποθήκευση στη βάση δεδομένων
+    db[selD] = s; 
+    localStorage.setItem('exfr_db_v53', JSON.stringify(db)); 
+    closeModal(); 
+    calculate();
 }
 
-function del() { delete db[selD]; localStorage.setItem('exfr_db_v53', JSON.stringify(db)); closeModal(); calculate(); }
-function closeModal() { document.getElementById('modal').style.display = 'none'; }
-function nav(v) { cur.setMonth(cur.getMonth() + v); calculate(); }
+function del() { 
+    delete db[selD]; 
+    localStorage.setItem('exfr_db_v53', JSON.stringify(db)); 
+    closeModal(); 
+    calculate(); 
+}
+
+function closeModal() { 
+    document.getElementById('modal').style.display = 'none'; 
+    selD = '';  // Εκκαθάριση της επιλεγμένης ημερομηνίας
+}
+
+function nav(v) { 
+    cur.setMonth(cur.getMonth() + v); 
+    calculate(); 
+}
 
 // Αρχικοποίηση
 document.addEventListener('DOMContentLoaded', function() {
