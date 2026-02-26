@@ -230,7 +230,7 @@
         <div class="total-box"><span class="total-label">ΠΕΡΑΝ</span><span class="total-val" style="color:#e65100" id="m-peran">0.0</span></div>
     </div>
     
-    <!-- Πλαίσιο Μειωμένο και Ρεπό (μόνο) -->
+    <!-- Πλαίσιο Μειωμένο και Ρεπό -->
     <div class="rep-container">
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 10px;">
             <div>
@@ -247,7 +247,7 @@
             </div>
         </div>
         
-        <!-- Πεδία ΡΕΠΟ (μόνο) -->
+        <!-- Πεδία ΡΕΠΟ -->
         <div class="rep-grid">
             <div class="rep-grid-item">
                 <span class="rep-label-small">ΠΛΗΡΩΜΕΝΕΣ</span>
@@ -762,17 +762,10 @@ function calculate() {
     
     weeks.forEach(w => {
         if (w.days.length === 0) return;
-        let holidayCount = 0;
-        let firstDay = new Date(w.days[0].dStr), diff = (firstDay.getDay() + 6) % 7;
-        let monday = new Date(firstDay); monday.setDate(firstDay.getDate() - diff);
         
-        for (let i = 0; i < 7; i++) {
-            let tempD = new Date(monday); tempD.setDate(monday.getDate() + i);
-            if (getHols(tempD.getFullYear()).includes(fmt(tempD)) && tempD.getDay() >= 1 && tempD.getDay() <= 5) holidayCount++;
-        }
-        
-        w.target = ( (weeklyHours - (holidayCount * (weeklyHours / 5))) / 7 ) * (w.days.length - w.days.filter(d => d.s && d.s.abs).length);
-        if (w.target < 0) w.target = 0; 
+        // Υπολογισμός στόχου εβδομάδας - ΧΩΡΙΣ αφαίρεση για αργίες
+        // Ο στόχος είναι απλά (weeklyHours / 7) * αριθμός ημερών
+        w.target = (weeklyHours / 7) * w.days.length;
         w.upk = -w.target;
         
         w.days.forEach(day => {
