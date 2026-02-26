@@ -408,6 +408,9 @@ let repStorage = JSON.parse(localStorage.getItem('exfr_rep_transfer') || '{"save
 const NIGHT_RATE = 3.3; // Καθαρό ποσό ανά ώρα νύχτας
 const PENTHEMERO_GROSS = 46; // Μεικτό ανά πενθήμερο
 
+// Λίστα αδειών
+const LEAVE_TYPES = ['ΚΑΝΟΝΙΚΗ ΑΔΕΙΑ', 'ΒΡΑΧΕΙΑ', 'ΑΝΑΡΡΩΤΙΚΗ'];
+
 function getCurrentMonthKey() {
     return `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}`;
 }
@@ -424,9 +427,9 @@ const SHIFTS = [
     {n:'ΑΔΙΑΘΕΤΟ', h:0, abs:true},
     {n:'ΡΕΠΟ', h:0, abs:true},
     {n:'ΟΦΕΙΛΟΜΕΝΟ ΡΕΠΟ', h:8},
-    {n:'ΚΑΝΟΝΙΚΗ ΑΔΕΙΑ', h:0, abs:true},
-    {n:'ΒΡΑΧΕΙΑ', h:0, abs:true},
-    {n:'ΑΝΑΡΡΩΤΙΚΗ', h:0, abs:true},
+    {n:'ΚΑΝΟΝΙΚΗ ΑΔΕΙΑ', h:0, leave:true},
+    {n:'ΒΡΑΧΕΙΑ', h:0, leave:true},
+    {n:'ΑΝΑΡΡΩΤΙΚΗ', h:0, leave:true},
     {n:'ΑΙΜΟΔΟΤΙΚΗ', h:6.8, abs:true},
     {n:'ΕΙΔΙΚΗ ΑΔΕΙΑ', h:6.8, abs:true},
     {n:'ΠΕΝΘΗΜΕΡΟ', h:0, penthemera:true},
@@ -706,7 +709,7 @@ function updateShiftMoney(shiftNum) {
     moneyInput.value = money.toFixed(2);
 }
 
-function selectShift(shiftName, shiftHours, isNight, isNightSpecial, isPenthemera) {
+function selectShift(shiftName, shiftHours, isNight, isNightSpecial, isPenthemera, isLeave) {
     // Βρες ποια βάρδια είναι ενεργή και ενημέρωσέ την
     const nameInput = document.getElementById(`c-n${activeShift}`);
     const hoursInput = document.getElementById(`c-h${activeShift}`);
@@ -719,6 +722,7 @@ function selectShift(shiftName, shiftHours, isNight, isNightSpecial, isPenthemer
     nameInput.dataset.night = isNight ? "1" : "0";
     nameInput.dataset.nightSpecial = isNightSpecial ? "1" : "0";
     nameInput.dataset.penthemera = isPenthemera ? "1" : "0";
+    nameInput.dataset.leave = isLeave ? "1" : "0";
     
     // Υπολογισμός χρημάτων
     let money = 0;
@@ -753,7 +757,7 @@ function calculate() {
     let weeks = Array.from({ length: 6 }, () => ({ days: [], target: 0, upk: 0, upa: 0 }));
     
     const weeklyHours = getEffectiveWeeklyHours();
-    const dailyHours = weeklyHours / 5; // Μοιράζουμε σε 5 εργάσιμες ημέρες
+    const dailyHours = weeklyHours / 5; // Ωρες ανά εργάσιμη μέρα
     
     for (let d = 1; d <= days; d++) {
         let dDate = new Date(y, m, d);
@@ -764,14 +768,29 @@ function calculate() {
     weeks.forEach(w => {
         if (w.days.length === 0) return;
         
-        // Υπολογισμός στόχου εβδομάδας - ΜΟΝΟ για εργάσιμες ημέρες (Δευτέρα έως Παρασκευή)
-        w.target = 0;
+        // Υπολογισμός στόχου εβδομάδας με τη ΜΕΘΟΔΟ ΤΩΝ 3
+        // 1. Βρίσκουμε πόσες εργάσιμες μέρες έχει η εβδομάδα (Δευ-Παρ)
+        let workingDays = 0;
         w.days.forEach(day => {
-            // Ημέρες Δευτέρα (1) έως Παρασκευή (5)
-            if (day.dw >= 1 && day.dw <= 5) {
-                w.target += dailyHours;
+            if (day.dw >= 1 && day.dw <= 5) { // Δευτέρα έως Παρασκευή
+                workingDays++;
             }
         });
+        
+        // 2. Βρίσκουμε πόσες από αυτές είναι άδειες
+        let leaveDays = 0;
+        w.days.forEach(day => {
+            if (day.s && (day.s.leave1 || day.s.leave2 || day.s.leave3)) {
+                if (day.dw >= 1 && day.dw <= 5) {
+                    leaveDays++;
+                }
+            }
+        });
+        
+        // 3. Στόχος = (εργάσιμες μέρες - άδειες) * dailyHours
+        // Δηλαδή: 40 ώρες/εβδομάδα, 2 μέρες άδεια = 40 - (2*8) = 24 ώρες
+        w.target = (workingDays - leaveDays) * dailyHours;
+        if (w.target < 0) w.target = 0;
         
         w.upk = -w.target;
         
@@ -880,18 +899,21 @@ function openModal(d) {
     document.getElementById('c-m1').value = s.m1 || '';
     document.getElementById('c-n1').dataset.night = s.night1 ? "1" : "0";
     document.getElementById('c-n1').dataset.penthemera = s.penthemera1 ? "1" : "0";
+    document.getElementById('c-n1').dataset.leave = s.leave1 ? "1" : "0";
     
     document.getElementById('c-n2').value = s.t2 || ''; 
     document.getElementById('c-h2').value = s.h2 || ''; 
     document.getElementById('c-m2').value = s.m2 || '';
     document.getElementById('c-n2').dataset.night = s.night2 ? "1" : "0";
     document.getElementById('c-n2').dataset.penthemera = s.penthemera2 ? "1" : "0";
+    document.getElementById('c-n2').dataset.leave = s.leave2 ? "1" : "0";
     
     document.getElementById('c-n3').value = s.t3 || ''; 
     document.getElementById('c-h3').value = s.h3 || ''; 
     document.getElementById('c-m3').value = s.m3 || '';
     document.getElementById('c-n3').dataset.night = s.night3 ? "1" : "0";
     document.getElementById('c-n3').dataset.penthemera = s.penthemera3 ? "1" : "0";
+    document.getElementById('c-n3').dataset.leave = s.leave3 ? "1" : "0";
     
     if (s.t3) {
         document.getElementById('div-s3').style.display = 'grid';
@@ -925,7 +947,7 @@ function renderShifts() {
         if (o.nightSpecial) description += ` (8ω ${NIGHT_RATE}€/ώρα)`;
         
         b.innerHTML = `<span>${description}</span>`;
-        b.onclick = () => selectShift(o.n, o.h, o.night || false, o.nightSpecial || false, o.penthemera || false);
+        b.onclick = () => selectShift(o.n, o.h, o.night || false, o.nightSpecial || false, o.penthemera || false, o.leave || false);
         grid.appendChild(b);
     });
 }
@@ -937,16 +959,19 @@ function saveDay() {
         m1: parseFloat(document.getElementById('c-m1').value) || 0,
         night1: document.getElementById('c-n1').dataset.night === "1",
         penthemera1: document.getElementById('c-n1').value === 'ΠΕΝΘΗΜΕΡΟ',
+        leave1: LEAVE_TYPES.includes(document.getElementById('c-n1').value),
         t2: document.getElementById('c-n2').value, 
         h2: parseFloat(document.getElementById('c-h2').value) || 0, 
         m2: parseFloat(document.getElementById('c-m2').value) || 0,
         night2: document.getElementById('c-n2').dataset.night === "1",
         penthemera2: document.getElementById('c-n2').value === 'ΠΕΝΘΗΜΕΡΟ',
+        leave2: LEAVE_TYPES.includes(document.getElementById('c-n2').value),
         t3: document.getElementById('c-n3').value, 
         h3: parseFloat(document.getElementById('c-h3').value) || 0, 
         m3: parseFloat(document.getElementById('c-m3').value) || 0,
         night3: document.getElementById('c-n3').dataset.night === "1",
         penthemera3: document.getElementById('c-n3').value === 'ΠΕΝΘΗΜΕΡΟ',
+        leave3: LEAVE_TYPES.includes(document.getElementById('c-n3').value),
         txt: document.getElementById('c-txt').value
     };
     
