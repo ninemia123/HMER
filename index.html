@@ -753,6 +753,7 @@ function calculate() {
     let weeks = Array.from({ length: 6 }, () => ({ days: [], target: 0, upk: 0, upa: 0 }));
     
     const weeklyHours = getEffectiveWeeklyHours();
+    const dailyHours = weeklyHours / 5; // Μοιράζουμε σε 5 εργάσιμες ημέρες
     
     for (let d = 1; d <= days; d++) {
         let dDate = new Date(y, m, d);
@@ -763,9 +764,15 @@ function calculate() {
     weeks.forEach(w => {
         if (w.days.length === 0) return;
         
-        // Υπολογισμός στόχου εβδομάδας - ΧΩΡΙΣ αφαίρεση για αργίες
-        // Ο στόχος είναι απλά (weeklyHours / 7) * αριθμός ημερών
-        w.target = (weeklyHours / 7) * w.days.length;
+        // Υπολογισμός στόχου εβδομάδας - ΜΟΝΟ για εργάσιμες ημέρες (Δευτέρα έως Παρασκευή)
+        w.target = 0;
+        w.days.forEach(day => {
+            // Ημέρες Δευτέρα (1) έως Παρασκευή (5)
+            if (day.dw >= 1 && day.dw <= 5) {
+                w.target += dailyHours;
+            }
+        });
+        
         w.upk = -w.target;
         
         w.days.forEach(day => {
