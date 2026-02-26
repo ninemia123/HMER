@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ημερολόγιο </title>
+    <title>Ημερολόγιο Νυχτερινών & Πενθημέρων</title>
     <script src="cordova.js"></script>
     <style>
         :root { --green: #1b5e20; --blue: #0d47a1; --red: #b71c1c; --gold: #fbc02d; --sat-bg: #e3f2fd; --sun-bg: #ffebee; --hol-bg: #ffcdd2; }
@@ -11,9 +11,8 @@
         .main-card { max-width: 1100px; margin: auto; background: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .header { background: var(--green); color: white; padding: 10px; }
         .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .header input, .header select { font-weight: bold; border-radius: 4px; border: none; padding: 10px; width: 100%; font-size: 14px; margin-top: 4px; }
+        .header select { font-weight: bold; border-radius: 4px; border: none; padding: 10px; width: 100%; font-size: 14px; margin-top: 4px; }
         
-        /* Βασικά month-totals (υπάρχοντα) */
         .month-totals { 
             display: grid; 
             grid-template-columns: repeat(4, 1fr); 
@@ -41,7 +40,6 @@
             color: var(--green); 
         }
         
-        /* ΝΕΑ ΠΕΔΙΑ ΡΕΠΟ (2x2 grid - ΔΙΟΡΘΩΜΕΝΟ) */
         .rep-container {
             padding: 8px 10px;
             background: #e3f2fd;
@@ -108,7 +106,6 @@
             border-color: #f44336 !important;
         }
         
-        /* Κουμπιά σε δική τους γραμμή */
         .rep-buttons-row {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -142,7 +139,6 @@
             background: #f44336;
         }
         
-        /* Υπόλοιπα styles παραμένουν ίδια */
         .weeks-banner { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; padding: 10px; background: #fffde7; border-bottom: 3px solid var(--gold); }
         .w-tile { background: white; border: 1px solid #ccc; padding: 5px; border-radius: 5px; text-align: center; font-size: 10px; }
         .w-val { font-weight: 900; font-size: 13px; display: block; }
@@ -157,30 +153,72 @@
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); }
         .modal-content { background: white; width: 98%; max-width: 550px; margin: 5px auto; padding: 10px; border-radius: 8px; max-height: 95vh; overflow-y: auto; box-sizing: border-box; }
         .m-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; margin-bottom: 10px; }
-        .m-btn { padding: 10px 4px; border: 1px solid #ccc; background: #f5f5f5; font-weight: bold; font-size: 11px; display: flex; justify-content: space-between; align-items: center; }
+        .m-btn { padding: 10px 4px; border: 1px solid #ccc; background: #f5f5f5; font-weight: bold; font-size: 11px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .m-btn:hover { background: #e0e0e0; }
+        .m-btn.selected { background: #4caf50; color: white; border-color: #2e7d32; }
         .shift-row { display: grid; grid-template-columns: 1.8fr 0.8fr 1fr; gap: 4px; margin-bottom: 6px; }
         .shift-row input { width: 100%; padding: 8px 4px; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; font-size: 14px; box-sizing: border-box; }
         .footer { padding: 15px; background: #fafafa; border-top: 4px solid var(--green); }
         .money-line { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 6px 0; font-size: 14px; font-weight: 900; }
         .backup-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; background: #ddd; }
-        .btn-b { padding: 15px 5px; font-size: 12px; font-weight: 900; border-radius: 4px; border: 2px solid #666; background: #fff; color: #000; }
+        .btn-b { padding: 15px 5px; font-size: 12px; font-weight: 900; border-radius: 4px; border: 2px solid #666; background: #fff; color: #000; cursor: pointer; }
+        .penthemera-box { 
+            background: #fff3e0; 
+            padding: 10px; 
+            border-radius: 5px; 
+            margin: 10px 0;
+            border-left: 5px solid #ff9800;
+        }
+        .penthemera-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .penthemera-item {
+            background: white;
+            padding: 8px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .total-net-box {
+            background: var(--green);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.8em;
+            font-weight: 900;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .shift-indicator {
+            font-size: 10px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .active-shift {
+            background: #2196f3 !important;
+            color: white !important;
+        }
     </style>
 </head>
 <body>
 <div class="main-card">
     <div class="header">
-        <div class="top-row"><b>ΗΜΕΡΟΛΟΓΙΟ</b>
-            <div><button onclick="nav(-1)">◄</button> <span id="month-label"></span> <button onclick="nav(1)">►</button></div>
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-            <div><label style="font-size:10px">ΒΑΣΙΚΟΣ</label><input type="number" id="salary" oninput="saveSalary()"></div>
-            <div><label style="font-size:10px">ΩΡΑΡΙΟ</label>
-                <select id="mode-sel" onchange="saveMode()">
-                    <option value="34">Ωράριο 34h</option>
-                    <option value="29">Μειωμένο 29h</option>
-                    <option value="24">Μειωμένο 24h</option>
-                </select>
+        <div class="top-row">
+            <b>ΕΞΦΡ - Νυχτερινά & Πενθήμερα</b>
+            <div>
+                <button onclick="nav(-1)">◄</button> 
+                <span id="month-label"></span> 
+                <button onclick="nav(1)">►</button>
             </div>
+        </div>
+        <div>
+            <label style="font-size:10px">ΩΡΑΡΙΟ</label>
+            <select id="mode-sel" onchange="saveMode()">
+                <option value="40">40 ώρες</option>
+                <option value="34">34 ώρες</option>
+                <option value="32">32 ώρες</option>
+            </select>
         </div>
     </div>
     
@@ -192,38 +230,47 @@
         <div class="total-box"><span class="total-label">ΠΕΡΑΝ</span><span class="total-val" style="color:#e65100" id="m-peran">0.0</span></div>
     </div>
     
-    <!-- ============= ΝΕΑ ΠΕΔΙΑ ΡΕΠΟ (2x2 GRID) ============= -->
+    <!-- Πλαίσιο Μειωμένο και Ρεπό (μόνο) -->
     <div class="rep-container">
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 10px;">
+            <div>
+                <span class="rep-label-small">ΜΕΙΩΜΕΝΟ</span>
+                <select id="reduced-select" class="rep-input-compact" onchange="updateWeeklyHours()">
+                    <option value="normal">Κανονικό</option>
+                    <option value="minus1">-1 ώρα</option>
+                    <option value="minus2">-2 ώρες</option>
+                </select>
+            </div>
+            <div>
+                <span class="rep-label-small">ΠΕΝΘΗΜΕΡΑ ΜΗΝΑ</span>
+                <div id="penthemera-count-display" class="rep-display-compact">0</div>
+            </div>
+        </div>
+        
+        <!-- Πεδία ΡΕΠΟ (μόνο) -->
         <div class="rep-grid">
-            <!-- Πληρωμένες Ώρες -->
             <div class="rep-grid-item">
                 <span class="rep-label-small">ΠΛΗΡΩΜΕΝΕΣ</span>
                 <input type="number" id="paidHours" class="rep-input-compact" value="0" step="0.5" placeholder="0" onchange="savePaidHours()">
             </div>
             
-            <!-- Συνολικό Ρεπό Μήνα (ΣΥΝ/ΜΗΝ) -->
             <div class="rep-grid-item">
                 <span class="rep-label-small">ΣΥΝ/ΜΗΝ</span>
                 <div id="synminRep" class="rep-display-compact">0</div>
             </div>
             
-            <!-- Προηγούμενο Ρεπό (ΠΡ/ΜΗΝ) - ΜΕ ΚΡΥΦΟ INPUT ΚΑΙ DISPLAY -->
             <div class="rep-grid-item">
                 <span class="rep-label-small">ΠΡ/ΜΗΝ</span>
-                <!-- Κρυφό input για την αριθμητική τιμή -->
-                <input type="number" id="prminRepRaw" class="rep-input-compact" style="display: none;" step="0.5" onchange="savePrminHours()">
-                <!-- Display που δείχνει τη μορφοποιημένη τιμή -->
-                <div id="prminRepDisplay" class="rep-display-compact" onclick="editPrminHours()" style="cursor: pointer;">0</div>
+                <div id="prminRep" class="rep-display-compact">0</div>
             </div>
             
-            <!-- Υπόλοιπο για Μεταφορά (ΠΡΟΤΕΙΝΟΜΕΝΟ) -->
             <div class="rep-grid-item">
                 <span class="rep-label-small">ΜΕΤΑΦΟΡΑ</span>
                 <div id="transferRep" class="rep-display-compact rep-display-transfer">0</div>
             </div>
         </div>
         
-        <!-- Κουμπιά σε ξεχωριστή γραμμή -->
+        <!-- Κουμπιά -->
         <div class="rep-buttons-row">
             <button class="rep-btn-compact" onclick="calculateRep()">
                 🧮 Υπολ.
@@ -236,9 +283,35 @@
             </button>
         </div>
     </div>
-    <!-- ============= ΤΕΛΟΣ ΝΕΩΝ ΠΕΔΙΩΝ ============= -->
+    
+    <!-- Υπολογισμός Πενθημέρων (αυτόματος από το ημερολόγιο) -->
+    <div class="penthemera-box">
+        <div class="penthemera-grid">
+            <div class="penthemera-item">
+                <div style="font-size: 11px; font-weight: bold;">Πενθήμερα</div>
+                <div id="p-count" style="font-size: 16px; font-weight: 900;">0</div>
+            </div>
+            <div class="penthemera-item">
+                <div style="font-size: 11px; font-weight: bold;">Μεικτό (46€/τεμ)</div>
+                <div id="p-gross" style="font-size: 16px; font-weight: 900;">0.00€</div>
+            </div>
+            <div class="penthemera-item">
+                <div style="font-size: 11px; font-weight: bold;">Εισφορά 2%</div>
+                <div id="p-eis" style="font-size: 14px; color: var(--red);">0.00€</div>
+            </div>
+            <div class="penthemera-item">
+                <div style="font-size: 11px; font-weight: bold;">Φόρος 20%</div>
+                <div id="p-tax" style="font-size: 14px; color: var(--red);">0.00€</div>
+            </div>
+            <div class="penthemera-item" style="grid-column: span 2; background: #e8f5e9;">
+                <div style="font-size: 11px; font-weight: bold;">ΚΑΘΑΡΟ ΠΕΝΘΗΜΕΡΩΝ</div>
+                <div id="p-net" style="font-size: 20px; font-weight: 900; color: var(--green);">0.00€</div>
+            </div>
+        </div>
+    </div>
     
     <div class="weeks-banner" id="weeks-stats"></div>
+    
     <table>
         <thead><tr><th>ΔΕ</th><th>ΤΡ</th><th>ΤΕ</th><th>ΠΕ</th><th>ΠΑ</th><th>ΣΑ</th><th>ΚΥ</th></tr></thead>
         <tbody id="cal-body"></tbody>
@@ -251,123 +324,659 @@
     </div>
 
     <div class="footer">
-        <div class="money-line" style="background: #fff9c4; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
-            ΣΥΝΟΛΟ ΩΡΩΝ: <b id="m-hours" style="font-size: 1.2em; color: var(--blue);">0.0</b>
+        <div class="money-line" style="background: #e1f5fe; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+            <span>ΣΥΝΟΛΟ ΝΥΧΤΕΡΙΝΩΝ ΩΡΩΝ:</span>
+            <b id="m-night-hours" style="font-size: 1.2em; color: var(--blue);">0.0</b>
         </div>
-        <div class="money-line">Μεικτά: <b id="r-gross">0.00€</b></div>
-        <div class="money-line">ΜΤΠΥ (2%): <b id="r-mtpy" style="color:var(--red)">0.00€</b></div>
-        <div class="money-line">Εισφορά (2%): <b id="r-eis" style="color:var(--red)">0.00€</b></div>
-        <div class="money-line">Φόρος (20%): <b id="r-tax" style="color:var(--red)">0.00€</b></div>
-        <div style="background:var(--green); color:white; padding:15px; text-align:center; font-size:2em; font-weight:900; border-radius:8px; margin-top:10px;" id="r-net">0.00€</div>
+        
+        <div class="money-line" style="background: #f3e5f5; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+            <span>ΚΑΘΑΡΑ ΝΥΧΤΕΡΙΝΩΝ (3.3€/ώρα):</span>
+            <b id="night-net" style="font-size: 1.2em; color: #7b1fa2;">0.00€</b>
+        </div>
+        
+        <!-- ΣΥΝΟΛΙΚΟ ΚΑΘΑΡΟ (Νύχτες + Πενθήμερα) -->
+        <div class="total-net-box" id="total-net">
+            0.00€
+        </div>
+        
+        <div style="font-size: 12px; text-align: center; color: #666; margin-top: 10px;">
+            * Το σύνολο είναι άθροισμα καθαρών νυχτερινών (3.3€/ώρα) και καθαρών πενθημέρων
+        </div>
     </div>
 </div>
 
 <div id="modal" class="modal">
     <div class="modal-content">
+        <div style="margin-bottom: 10px; font-weight: bold; text-align: center;" id="modal-date"></div>
+        
+        <!-- Ενεργή βάρδια indicator -->
+        <div class="shift-indicator" id="active-shift-indicator">
+            Επιλέξτε βάρδια 1 (πάτα σε κουμπί για αλλαγή)
+        </div>
+        
+        <!-- Κουμπιά επιλογής ενεργής βάρδιας -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 10px;">
+            <button class="rep-btn-compact shift-select-btn" onclick="setActiveShift(1)" id="shift1-btn">Βάρδια 1</button>
+            <button class="rep-btn-compact shift-select-btn" onclick="setActiveShift(2)" id="shift2-btn">Βάρδια 2</button>
+            <button class="rep-btn-compact shift-select-btn" onclick="setActiveShift(3)" id="shift3-btn">Βάρδια 3</button>
+        </div>
+        
+        <!-- Λίστα βαρδιών -->
         <div class="m-grid" id="m-opts"></div>
         <hr>
-        <div class="shift-row"><input type="text" id="c-n1" placeholder="Βάρδια 1"><input type="number" id="c-h1" oninput="recalcMoney(1)"><input type="number" id="c-m1"></div>
-        <div class="shift-row"><input type="text" id="c-n2" placeholder="Βάρδια 2"><input type="number" id="c-h2" oninput="recalcMoney(2)"><input type="number" id="c-m2"></div>
-        <div id="div-s3" class="shift-row" style="display:none"><input type="text" id="c-n3" placeholder="Βάρδια 3"><input type="number" id="c-h3" oninput="recalcMoney(3)"><input type="number" id="c-m3"></div>
-        <button id="btn-add-3" onclick="document.getElementById('div-s3').style.display='grid'; this.style.display='none'" style="width:100%; margin-bottom:5px">+ 3η Βάρδια</button>
-        <input type="text" id="c-txt" placeholder="Σχόλιο..." style="width:100%; padding:10px; box-sizing:border-box;">
-        <button onclick="save()" style="width:100%; padding:15px; background:var(--green); color:white; font-weight:bold; margin-top:10px;">ΑΠΟΘΗΚΕΥΣΗ</button>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-top:5px">
-            <button onclick="del()" style="padding:10px; background:var(--red); color:white;">ΔΙΑΓΡΑΦΗ</button>
-            <button onclick="closeModal()" style="padding:10px;">ΑΚΥΡΟ</button>
+        
+        <!-- Πεδία βαρδιών -->
+        <div class="shift-row">
+            <input type="text" id="c-n1" placeholder="Βάρδια 1" readonly>
+            <input type="number" id="c-h1" placeholder="Ώρες" step="0.1" onchange="updateShiftMoney(1)">
+            <input type="number" id="c-m1" placeholder="Ποσό" readonly>
         </div>
+        <div class="shift-row">
+            <input type="text" id="c-n2" placeholder="Βάρδια 2" readonly>
+            <input type="number" id="c-h2" placeholder="Ώρες" step="0.1" onchange="updateShiftMoney(2)">
+            <input type="number" id="c-m2" placeholder="Ποσό" readonly>
+        </div>
+        <div id="div-s3" class="shift-row" style="display:none">
+            <input type="text" id="c-n3" placeholder="Βάρδια 3" readonly>
+            <input type="number" id="c-h3" placeholder="Ώρες" step="0.1" onchange="updateShiftMoney(3)">
+            <input type="number" id="c-m3" placeholder="Ποσό" readonly>
+        </div>
+        
+        <button id="btn-add-3" onclick="showThirdShift()" style="width:100%; padding:10px; margin-bottom:10px; background:#2196f3; color:white; border:none; border-radius:4px; font-weight:bold;">+ 3η Βάρδια</button>
+        
+        <input type="text" id="c-txt" placeholder="Σχόλιο..." style="width:100%; padding:10px; box-sizing:border-box; margin:10px 0;">
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
+            <button onclick="saveDay()" style="padding:15px; background:var(--green); color:white; border:none; border-radius:4px; font-weight:bold;">ΑΠΟΘΗΚΕΥΣΗ</button>
+            <button onclick="deleteDay()" style="padding:15px; background:var(--red); color:white; border:none; border-radius:4px; font-weight:bold;">ΔΙΑΓΡΑΦΗ</button>
+        </div>
+        <button onclick="closeModal()" style="width:100%; padding:10px; background:#ccc; border:none; border-radius:4px; font-weight:bold; margin-top:5px;">ΚΛΕΙΣΙΜΟ</button>
     </div>
 </div>
 
 <script>
 let cur = new Date(); 
 let db = JSON.parse(localStorage.getItem('exfr_db_v53') || '{}');
-let settings = JSON.parse(localStorage.getItem('exfr_settings') || '{"mode":"34","salary":1100}');
-let activeInput = 'c-n1'; let selD = '';
+let settings = JSON.parse(localStorage.getItem('exfr_settings') || '{"mode":"40"}');
+let selD = '';
+let activeShift = 1; // 1,2,3 για ενεργή βάρδια
 
 // Αποθήκευση μεταφοράς ρεπό
 let repStorage = JSON.parse(localStorage.getItem('exfr_rep_transfer') || '{"savedTransfers": {}}');
 
-// Λαμβάνει το κλειδί για τον τρέχοντα μήνα (YYYY-MM)
+// Σταθερές
+const NIGHT_RATE = 3.3; // Καθαρό ποσό ανά ώρα νύχτας
+const PENTHEMERO_GROSS = 46; // Μεικτό ανά πενθήμερο
+
 function getCurrentMonthKey() {
     return `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}`;
 }
 
-// Λαμβάνει το κλειδί για τον προηγούμενο μήνα
 function getPreviousMonthKey() {
     let prevMonth = new Date(cur.getFullYear(), cur.getMonth() - 1, 1);
     return `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, '0')}`;
 }
 
-// Νέα συνάρτηση μορφοποίησης ωρών σε ημέρες/ώρες
-function formatHoursToRep(hours) {
-    const HOURS_PER_DAY = 8.5;
-    if (!hours || Math.abs(hours) < 0.1) return "0";
-    
-    const isNegative = hours < 0;
-    const absHours = Math.abs(hours);
-    const days = Math.floor(absHours / HOURS_PER_DAY);
-    const remainingHours = absHours - (days * HOURS_PER_DAY);
-    
-    let result = isNegative ? "-" : "";
-    
-    if (days > 0) {
-        result += `${days}ρ`;
-        if (remainingHours > 0) {
-            result += ` ${remainingHours.toFixed(1)}ω`;
-        }
-    } else {
-        result += `${absHours.toFixed(1)}ω`;
-    }
-    
-    return result;
-}
-
-// Επεξεργασία του ΠΡ/ΜΗΝ
-function editPrminHours() {
-    const display = document.getElementById('prminRepDisplay');
-    const input = document.getElementById('prminRepRaw');
-    
-    // Απόκρυψη display, εμφάνιση input
-    display.style.display = 'none';
-    input.style.display = 'block';
-    
-    // Focus στο input
-    input.focus();
-    
-    // Επιλογή όλου του κειμένου
-    input.select();
-    
-    // Αποθήκευση όταν χάσει το focus
-    input.onblur = function() {
-        savePrminHours();
-    };
-    
-    // Επίσης με Enter
-    input.onkeypress = function(e) {
-        if (e.key === 'Enter') {
-            savePrminHours();
-        }
-    };
-}
-
-// ΟΡΙΣΜΟΣ ΒΑΡΔΙΩΝ - ΜΕ ΤΙΣ ΝΕΕΣ ΑΛΛΑΓΕΣ
 const SHIFTS = [
-    {n:'ΠΡΩΙ', h:6, s:0}, {n:'ΑΠΟΓΕΥΜΑ', h:6, s:0}, {n:'1/2 ΩΡΑΣ', h:0.5, s:0},
-    {n:'ΝΥΧΤΑ', h:6, s:0.6}, 
-    {n:'ΝΥΧΤΑ Α', h:6, s:0.6},  // Προσθήκη ΝΥΧΤΑ Α - πληρώνεται για 3 ώρες νύχτας
-    {n:'ΝΥΧΤΑ Β', h:6, s:0.6},  // Προσθήκη ΝΥΧΤΑ Β - πληρώνεται για 5 ώρες νύχτας
-    {n:'ΑΡΓΙΑ', h:6, s:0.75}, {n:'ΠΕΡΑΝ 5ΗΜ', h:6, s:1.25},
-    {n:'ΠΕΡ.ΑΡΓ.ΠΡΩΙ', h:6, s:1.4}, {n:'ΠΕΡ.ΑΡΓ.ΝΥΧΤ', h:6, s:1.45},
-    {n:'ΥΠΕΡ.ΠΡΩΙ (ΠΙΚΕΤΟ)', h:1, s:1.0, isOT:true},  // Διόρθωση σε ΠΙΚΕΤΟ
-    {n:'ΥΠΕΡ.ΝΥΧΤΑ', h:1, s:1.3, isOT:true},
-    {n:'ΕΙΔΙΚΗ ΑΔΕΙΑ', h:6.8, s:0, abs:true}, {n:'ΑΙΜΟΔΟΤΙΚΗ', h:6.8, s:0, abs:true},
-    {n:'ΚΑΝ. ΑΔΕΙΑ', h:0, s:0, abs:true}, {n:'ΑΝΑΡΡΩΤΙΚΗ', h:0, s:0, abs:true},
-    {n:'ΒΡΑΧΕΙΑ', h:0, s:0, abs:true}, {n:'ΟΦ ΡΕΠΟ', h:8.5, s:0},
-    {n:'ΑΔΙΑΘΕΤΟ', h:0, s:0, abs:true}, {n:'ΡΕΠΟ', h:0, s:0}
+    {n:'ΠΡΩΙ', h:8},
+    {n:'ΑΠΟΓΕΥΜΑ', h:8},
+    {n:'ΝΥΧΤΑ', h:8, night:true},
+    {n:'ΑΔΙΑΘΕΤΟ', h:0, abs:true},
+    {n:'ΡΕΠΟ', h:0, abs:true},
+    {n:'ΟΦΕΙΛΟΜΕΝΟ ΡΕΠΟ', h:8},
+    {n:'ΚΑΝΟΝΙΚΗ ΑΔΕΙΑ', h:0, abs:true},
+    {n:'ΒΡΑΧΕΙΑ', h:0, abs:true},
+    {n:'ΑΝΑΡΡΩΤΙΚΗ', h:0, abs:true},
+    {n:'ΑΙΜΟΔΟΤΙΚΗ', h:6.8, abs:true},
+    {n:'ΕΙΔΙΚΗ ΑΔΕΙΑ', h:6.8, abs:true},
+    {n:'ΠΕΝΘΗΜΕΡΟ', h:0, penthemera:true},
+    {n:'ΑΡΓΙΑ Π', h:16},
+    {n:'ΑΡΓΙΑ ΑΠ', h:16},
+    {n:'ΑΡΓΙΑ ΝΥΧΤΑ', h:16, nightSpecial:true}
 ];
 
-// --- APK BACKUP ENGINE ---
+function fmt(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+
+function getHols(y) {
+    let h = [fmt(new Date(y,0,1)), fmt(new Date(y,0,6)), fmt(new Date(y,2,25)), fmt(new Date(y,4,1)), fmt(new Date(y,7,15)), fmt(new Date(y,9,16)), fmt(new Date(y,9,28)), fmt(new Date(y,11,25)), fmt(new Date(y,11,26))];
+    let a=y%19, d_val=(19*a+15)%30, e_val=(2*(y%4)+4*(y%7)+6*d_val+6)%7;
+    let p=d_val+e_val+22+13; let m=3, day=p; if(day>31){day-=31; m=4;} if(day>30){day-=30; m=5;}
+    let easter = new Date(y, m-1, day);
+    const add = (diff) => { let tmp = new Date(easter); tmp.setDate(tmp.getDate() + diff); h.push(fmt(tmp)); };
+    add(-48); add(-2); add(-1); add(0); add(1); add(50); return h;
+}
+
+function saveMode() { 
+    settings.mode = document.getElementById('mode-sel').value; 
+    localStorage.setItem('exfr_settings', JSON.stringify(settings)); 
+    calculate(); 
+}
+
+function updateWeeklyHours() {
+    calculate();
+}
+
+function getEffectiveWeeklyHours() {
+    let baseHours = parseFloat(document.getElementById('mode-sel').value) || 40;
+    let reduced = document.getElementById('reduced-select').value;
+    
+    if (reduced === 'minus1') {
+        return baseHours - 5;
+    } else if (reduced === 'minus2') {
+        return baseHours - 10;
+    }
+    return baseHours;
+}
+
+function countPenthemera() {
+    const y = cur.getFullYear(), m = cur.getMonth();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    let count = 0;
+    
+    for (let d = 1; d <= daysInMonth; d++) {
+        let dStr = fmt(new Date(y, m, d));
+        let dayData = db[dStr];
+        
+        if (dayData) {
+            // Έλεγχος και για τις 3 βάρδιες
+            if (dayData.t1 === 'ΠΕΝΘΗΜΕΡΟ') count++;
+            if (dayData.t2 === 'ΠΕΝΘΗΜΕΡΟ') count++;
+            if (dayData.t3 === 'ΠΕΝΘΗΜΕΡΟ') count++;
+        }
+    }
+    
+    return count;
+}
+
+function calculatePenthemera() {
+    const count = countPenthemera();
+    const gross = count * PENTHEMERO_GROSS;
+    const eisfora = gross * 0.02;
+    const afterEisfora = gross - eisfora;
+    const tax = afterEisfora * 0.20;
+    const net = afterEisfora - tax;
+    
+    document.getElementById('penthemera-count-display').textContent = count;
+    document.getElementById('p-count').textContent = count;
+    document.getElementById('p-gross').textContent = gross.toFixed(2) + '€';
+    document.getElementById('p-eis').textContent = eisfora.toFixed(2) + '€';
+    document.getElementById('p-tax').textContent = tax.toFixed(2) + '€';
+    document.getElementById('p-net').textContent = net.toFixed(2) + '€';
+    
+    // Ενημέρωση συνολικού καθαρού
+    updateTotalNet();
+}
+
+function updateTotalNet() {
+    // Υπολογισμός καθαρών από νύχτες
+    const nightHours = parseFloat(document.getElementById('m-night-hours').textContent) || 0;
+    const nightNet = nightHours * NIGHT_RATE;
+    document.getElementById('night-net').textContent = nightNet.toFixed(2) + '€';
+    
+    // Υπολογισμός καθαρών από πενθήμερα
+    const penthemeraNetText = document.getElementById('p-net').textContent;
+    const penthemeraNet = parseFloat(penthemeraNetText) || 0;
+    
+    // Συνολικό καθαρό
+    const totalNet = nightNet + penthemeraNet;
+    document.getElementById('total-net').textContent = totalNet.toFixed(2) + '€';
+}
+
+function savePaidHours() {
+    const paidHours = parseFloat(document.getElementById('paidHours').value) || 0;
+    const monthKey = `paid_${cur.getFullYear()}-${cur.getMonth()}`;
+    db[monthKey] = paidHours;
+    localStorage.setItem('exfr_db_v53', JSON.stringify(db));
+    calculateRep();
+}
+
+function calculateRep() {
+    const HOURS_PER_DAY = 8;
+    const currentMonthKey = getCurrentMonthKey();
+    const previousMonthKey = getPreviousMonthKey();
+    
+    const peranHours = parseFloat(document.getElementById('m-peran').textContent) || 0;
+    const paidHours = parseFloat(document.getElementById('paidHours').value) || 0;
+    
+    const synminHours = peranHours - paidHours;
+    
+    let prminHours = 0;
+    if (repStorage.savedTransfers[previousMonthKey]) {
+        prminHours = repStorage.savedTransfers[previousMonthKey];
+    }
+    
+    const transferHours = prminHours + synminHours;
+    
+    // Μορφοποίηση ΣΥΝ/ΜΗΝ
+    let synminText = "0";
+    let synminEl = document.getElementById('synminRep');
+    synminEl.classList.remove('negative-value');
+    
+    if (Math.abs(synminHours) > 0) {
+        const isNegative = synminHours < 0;
+        const absHours = Math.abs(synminHours);
+        const days = Math.floor(absHours / HOURS_PER_DAY);
+        const remainingHours = absHours - (days * HOURS_PER_DAY);
+        
+        if (days > 0) {
+            synminText = `${isNegative ? '-' : ''}${days}ρ`;
+            if (remainingHours > 0) {
+                synminText += ` ${remainingHours.toFixed(1)}ω`;
+            }
+        } else {
+            synminText = `${isNegative ? '-' : ''}${absHours.toFixed(1)}ω`;
+        }
+        
+        if (isNegative) {
+            synminEl.classList.add('negative-value');
+        }
+    }
+    synminEl.textContent = synminText;
+    
+    // Εμφάνιση ΠΡ/ΜΗΝ
+    let prminText = "0";
+    let prminEl = document.getElementById('prminRep');
+    prminEl.classList.remove('negative-value');
+    
+    if (Math.abs(prminHours) > 0) {
+        const isNegative = prminHours < 0;
+        const absHours = Math.abs(prminHours);
+        const days = Math.floor(absHours / HOURS_PER_DAY);
+        const remainingHours = absHours - (days * HOURS_PER_DAY);
+        
+        if (days > 0) {
+            prminText = `${isNegative ? '-' : ''}${days}ρ`;
+            if (remainingHours > 0) {
+                prminText += ` ${remainingHours.toFixed(1)}ω`;
+            }
+        } else {
+            prminText = `${isNegative ? '-' : ''}${absHours.toFixed(1)}ω`;
+        }
+        
+        if (isNegative) {
+            prminEl.classList.add('negative-value');
+        }
+    }
+    prminEl.textContent = prminText;
+    
+    // Εμφάνιση ΜΕΤΑΦΟΡΑΣ
+    let transferText = "0";
+    let transferEl = document.getElementById('transferRep');
+    transferEl.classList.remove('negative-value');
+    
+    if (Math.abs(transferHours) > 0) {
+        const isNegative = transferHours < 0;
+        const absTransfer = Math.abs(transferHours);
+        const days = Math.floor(absTransfer / HOURS_PER_DAY);
+        const remainingHours = absTransfer - (days * HOURS_PER_DAY);
+        
+        if (days > 0) {
+            transferText = `${isNegative ? '-' : ''}${days}ρ`;
+            if (remainingHours > 0) {
+                transferText += ` ${remainingHours.toFixed(1)}ω`;
+            }
+        } else {
+            transferText = `${isNegative ? '-' : ''}${absTransfer.toFixed(1)}ω`;
+        }
+        
+        if (isNegative) {
+            transferEl.classList.add('negative-value');
+        }
+    }
+    transferEl.textContent = transferText;
+    
+    return {
+        synminHours,
+        prminHours,
+        transferHours,
+        currentMonthKey
+    };
+}
+
+function saveRepTransfer() {
+    const result = calculateRep();
+    
+    if (result.transferHours !== undefined) {
+        repStorage.savedTransfers[result.currentMonthKey] = result.transferHours;
+        localStorage.setItem('exfr_rep_transfer', JSON.stringify(repStorage));
+        showTempMessage("✅ Αποθηκεύτηκε μεταφορά", 2000);
+    }
+}
+
+function clearRepData() {
+    if (confirm("Εκκαθάριση πληρωμένων ωρών τρέχοντος μήνα;")) {
+        document.getElementById('paidHours').value = 0;
+        savePaidHours();
+        document.getElementById('transferRep').textContent = "0";
+        document.getElementById('transferRep').classList.remove('negative-value');
+        calculateRep();
+        showTempMessage("✅ Μηδενίστηκαν οι πληρωμένες ώρες", 2000);
+    }
+}
+
+function showTempMessage(msg, duration) {
+    const transferEl = document.getElementById('transferRep');
+    const originalText = transferEl.textContent;
+    const originalClass = transferEl.className;
+    
+    transferEl.textContent = msg;
+    transferEl.className = "rep-display-compact";
+    transferEl.style.background = "#4caf50";
+    transferEl.style.color = "white";
+    transferEl.style.borderColor = "#388e3c";
+    
+    setTimeout(() => {
+        transferEl.textContent = originalText;
+        transferEl.className = originalClass;
+        transferEl.style.background = "";
+        transferEl.style.color = "";
+        transferEl.style.borderColor = "";
+    }, duration);
+}
+
+function setActiveShift(shift) {
+    activeShift = shift;
+    
+    // Ενημέρωση indicator
+    document.getElementById('active-shift-indicator').textContent = `Επιλέξτε βάρδια ${shift} (πάτα σε κουμπί για αλλαγή)`;
+    
+    // Highlight το ενεργό κουμπί
+    document.querySelectorAll('.shift-select-btn').forEach(btn => btn.classList.remove('active-shift'));
+    document.getElementById(`shift${shift}-btn`).classList.add('active-shift');
+}
+
+function showThirdShift() {
+    document.getElementById('div-s3').style.display = 'grid';
+    document.getElementById('btn-add-3').style.display = 'none';
+}
+
+function updateShiftMoney(shiftNum) {
+    const nameInput = document.getElementById(`c-n${shiftNum}`);
+    const hours = parseFloat(document.getElementById(`c-h${shiftNum}`).value) || 0;
+    const moneyInput = document.getElementById(`c-m${shiftNum}`);
+    
+    let money = 0;
+    
+    if (nameInput.value === 'ΝΥΧΤΑ') {
+        money = hours * NIGHT_RATE;
+    } else if (nameInput.value === 'ΑΡΓΙΑ ΝΥΧΤΑ') {
+        money = 8 * NIGHT_RATE;
+    }
+    
+    moneyInput.value = money.toFixed(2);
+}
+
+function selectShift(shiftName, shiftHours, isNight, isNightSpecial, isPenthemera) {
+    // Βρες ποια βάρδια είναι ενεργή και ενημέρωσέ την
+    const nameInput = document.getElementById(`c-n${activeShift}`);
+    const hoursInput = document.getElementById(`c-h${activeShift}`);
+    const moneyInput = document.getElementById(`c-m${activeShift}`);
+    
+    nameInput.value = shiftName;
+    hoursInput.value = shiftHours;
+    
+    // Αποθήκευση attribute
+    nameInput.dataset.night = isNight ? "1" : "0";
+    nameInput.dataset.nightSpecial = isNightSpecial ? "1" : "0";
+    nameInput.dataset.penthemera = isPenthemera ? "1" : "0";
+    
+    // Υπολογισμός χρημάτων
+    let money = 0;
+    if (isNight) {
+        money = shiftHours * NIGHT_RATE;
+    } else if (isNightSpecial) {
+        money = 8 * NIGHT_RATE;
+    }
+    
+    moneyInput.value = money.toFixed(2);
+    
+    // Αυτόματη μετάβαση στην επόμενη βάρδια αν δεν είναι η 3η
+    if (activeShift < 3) {
+        setActiveShift(activeShift + 1);
+    }
+}
+
+function calculate() {
+    const y = cur.getFullYear(), m = cur.getMonth(), hols = getHols(y);
+    document.getElementById('mode-sel').value = settings.mode;
+    document.getElementById('month-label').innerText = new Intl.DateTimeFormat('el-GR', { month: 'short', year: 'numeric' }).format(cur).toUpperCase();
+    
+    // Φόρτωση αποθηκευμένων τιμών
+    const paidMonthKey = `paid_${y}-${m}`;
+    document.getElementById('paidHours').value = db[paidMonthKey] || 0;
+    
+    document.getElementById('transferRep').textContent = "0";
+    document.getElementById('transferRep').classList.remove('negative-value');
+    
+    let start = (new Date(y, m, 1).getDay() + 6) % 7, days = new Date(y, m + 1, 0).getDate();
+    let monthT = 0, monthUPK = 0, monthUPA = 0, totalNightHours = 0;
+    let weeks = Array.from({ length: 6 }, () => ({ days: [], target: 0, upk: 0, upa: 0 }));
+    
+    const weeklyHours = getEffectiveWeeklyHours();
+    
+    for (let d = 1; d <= days; d++) {
+        let dDate = new Date(y, m, d);
+        let dStr = fmt(dDate), wIdx = Math.floor((d + start - 1) / 7);
+        weeks[wIdx].days.push({ dStr, isH: hols.includes(dStr), dw: dDate.getDay(), s: db[dStr] });
+    }
+    
+    weeks.forEach(w => {
+        if (w.days.length === 0) return;
+        let holidayCount = 0;
+        let firstDay = new Date(w.days[0].dStr), diff = (firstDay.getDay() + 6) % 7;
+        let monday = new Date(firstDay); monday.setDate(firstDay.getDate() - diff);
+        
+        for (let i = 0; i < 7; i++) {
+            let tempD = new Date(monday); tempD.setDate(monday.getDate() + i);
+            if (getHols(tempD.getFullYear()).includes(fmt(tempD)) && tempD.getDay() >= 1 && tempD.getDay() <= 5) holidayCount++;
+        }
+        
+        w.target = ( (weeklyHours - (holidayCount * (weeklyHours / 5))) / 7 ) * (w.days.length - w.days.filter(d => d.s && d.s.abs).length);
+        if (w.target < 0) w.target = 0; 
+        w.upk = -w.target;
+        
+        w.days.forEach(day => {
+            if (day.s) {
+                // Υπολογισμός νυχτερινών ωρών (μόνο για ΝΥΧΤΑ και ΑΡΓΙΑ ΝΥΧΤΑ)
+                if (day.s.night1) totalNightHours += (day.s.h1||0);
+                if (day.s.night2) totalNightHours += (day.s.h2||0);
+                if (day.s.night3) totalNightHours += (day.s.h3||0);
+                
+                // Υπολογισμός ωρών για ΥΠΚ/ΥΠΑ (εξαιρούνται τα πενθήμερα)
+                if (!day.s.penthemera1 && !day.s.penthemera2 && !day.s.penthemera3) {
+                    let hc = (day.s.h1||0) + (day.s.h2||0) + (day.s.h3||0);
+                    
+                    for (let i = 0; i < Math.round(hc * 10); i++) {
+                        if (w.upk < -0.01) w.upk += 0.1; 
+                        else { 
+                            if (day.dw === 0 || day.isH) w.upa += 0.1; 
+                            else w.upk += 0.1; 
+                        }
+                    }
+                }
+            }
+        });
+        
+        monthT += w.target; 
+        monthUPK += w.upk; 
+        monthUPA += w.upa;
+    });
+    
+    document.getElementById('m-night-hours').innerText = totalNightHours.toFixed(1);
+    document.getElementById('m-target').innerText = monthT.toFixed(1);
+    document.getElementById('m-upk').innerText = monthUPK.toFixed(1);
+    document.getElementById('m-upa').innerText = monthUPA.toFixed(1);
+    document.getElementById('m-peran').innerText = (monthUPK + monthUPA).toFixed(1);
+    
+    // Δημιουργία ημερολογίου
+    let body = document.getElementById('cal-body'); 
+    body.innerHTML = ''; 
+    let row = document.createElement('tr');
+    
+    for (let i = 0; i < start; i++) row.appendChild(document.createElement('td'));
+    
+    for (let d = 1; d <= days; d++) {
+        if (row.children.length === 7) { 
+            body.appendChild(row); 
+            row = document.createElement('tr'); 
+        }
+        
+        let dStr = fmt(new Date(y, m, d)), s = db[dStr], isH = hols.includes(dStr), dw = new Date(y, m, d).getDay();
+        let cell = document.createElement('td'); 
+        cell.onclick = () => openModal(dStr);
+        
+        if (isH) cell.className = 'holiday-cell'; 
+        else if (dw === 0) cell.className = 'sun-cell'; 
+        else if (dw === 6) cell.className = 'sat-cell';
+        
+        let tags = ''; 
+        if (s) { 
+            if(s.t1) tags+=`<div class="shift-tag">${s.t1}</div>`; 
+            if(s.t2) tags+=`<div class="shift-tag">${s.t2}</div>`; 
+            if(s.t3) tags+=`<div class="shift-tag">${s.t3}</div>`; 
+        }
+        
+        cell.innerHTML = `<span class="day-num">${d}</span>${tags}${s && s.txt ? `<div class="day-note">${s.txt}</div>` : ''}`;
+        row.appendChild(cell);
+    }
+    
+    body.appendChild(row);
+    
+    // Εβδομαδιαία στατιστικά
+    const wDiv = document.getElementById('weeks-stats'); 
+    wDiv.innerHTML = '';
+    
+    weeks.forEach((w, i) => { 
+        if (w.days.length > 0) {
+            wDiv.innerHTML += `
+                <div class="w-tile">
+                    ΕΒΔ. ${i+1}<br>
+                    ΣΤ: <span class="w-val">${w.target.toFixed(1)}</span>
+                    ΥΠΚ: <span class="w-val" style="color:var(--blue)">${w.upk.toFixed(1)}</span>
+                    ΥΠΑ: <span class="w-val" style="color:var(--red)">${w.upa.toFixed(1)}</span>
+                </div>
+            `;
+        }
+    });
+    
+    // Υπολογισμός πενθημέρων και ενημέρωση συνόλων
+    calculatePenthemera();
+    calculateRep();
+    updateTotalNet();
+}
+
+function openModal(d) {
+    selD = d; 
+    let s = db[d] || {};
+    
+    // Εμφάνιση ημερομηνίας
+    const dateObj = new Date(d);
+    const formattedDate = dateObj.toLocaleDateString('el-GR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    document.getElementById('modal-date').textContent = formattedDate;
+    
+    // Φόρτωση δεδομένων
+    document.getElementById('c-n1').value = s.t1 || ''; 
+    document.getElementById('c-h1').value = s.h1 || ''; 
+    document.getElementById('c-m1').value = s.m1 || '';
+    document.getElementById('c-n1').dataset.night = s.night1 ? "1" : "0";
+    document.getElementById('c-n1').dataset.penthemera = s.penthemera1 ? "1" : "0";
+    
+    document.getElementById('c-n2').value = s.t2 || ''; 
+    document.getElementById('c-h2').value = s.h2 || ''; 
+    document.getElementById('c-m2').value = s.m2 || '';
+    document.getElementById('c-n2').dataset.night = s.night2 ? "1" : "0";
+    document.getElementById('c-n2').dataset.penthemera = s.penthemera2 ? "1" : "0";
+    
+    document.getElementById('c-n3').value = s.t3 || ''; 
+    document.getElementById('c-h3').value = s.h3 || ''; 
+    document.getElementById('c-m3').value = s.m3 || '';
+    document.getElementById('c-n3').dataset.night = s.night3 ? "1" : "0";
+    document.getElementById('c-n3').dataset.penthemera = s.penthemera3 ? "1" : "0";
+    
+    if (s.t3) {
+        document.getElementById('div-s3').style.display = 'grid';
+        document.getElementById('btn-add-3').style.display = 'none';
+    } else {
+        document.getElementById('div-s3').style.display = 'none';
+        document.getElementById('btn-add-3').style.display = 'block';
+    }
+    
+    document.getElementById('c-txt').value = s.txt || '';
+    
+    // Αρχικοποίηση ενεργής βάρδιας
+    setActiveShift(1);
+    
+    // Δημιουργία κουμπιών βαρδιών
+    renderShifts();
+    
+    document.getElementById('modal').style.display = 'block';
+}
+
+function renderShifts() {
+    const grid = document.getElementById('m-opts'); 
+    grid.innerHTML = '';
+    
+    SHIFTS.forEach(o => {
+        let b = document.createElement('div'); 
+        b.className = 'm-btn';
+        
+        let description = o.n;
+        if (o.night) description += ` (${NIGHT_RATE}€/ώρα)`;
+        if (o.nightSpecial) description += ` (8ω ${NIGHT_RATE}€/ώρα)`;
+        
+        b.innerHTML = `<span>${description}</span>`;
+        b.onclick = () => selectShift(o.n, o.h, o.night || false, o.nightSpecial || false, o.penthemera || false);
+        grid.appendChild(b);
+    });
+}
+
+function saveDay() {
+    const s = {
+        t1: document.getElementById('c-n1').value, 
+        h1: parseFloat(document.getElementById('c-h1').value) || 0, 
+        m1: parseFloat(document.getElementById('c-m1').value) || 0,
+        night1: document.getElementById('c-n1').dataset.night === "1",
+        penthemera1: document.getElementById('c-n1').value === 'ΠΕΝΘΗΜΕΡΟ',
+        t2: document.getElementById('c-n2').value, 
+        h2: parseFloat(document.getElementById('c-h2').value) || 0, 
+        m2: parseFloat(document.getElementById('c-m2').value) || 0,
+        night2: document.getElementById('c-n2').dataset.night === "1",
+        penthemera2: document.getElementById('c-n2').value === 'ΠΕΝΘΗΜΕΡΟ',
+        t3: document.getElementById('c-n3').value, 
+        h3: parseFloat(document.getElementById('c-h3').value) || 0, 
+        m3: parseFloat(document.getElementById('c-m3').value) || 0,
+        night3: document.getElementById('c-n3').dataset.night === "1",
+        penthemera3: document.getElementById('c-n3').value === 'ΠΕΝΘΗΜΕΡΟ',
+        txt: document.getElementById('c-txt').value
+    };
+    
+    // Έλεγχος αν είναι απούσα (για abs calculation)
+    s.abs = SHIFTS.find(x => x.n === s.t1)?.abs || SHIFTS.find(x => x.n === s.t2)?.abs || SHIFTS.find(x => x.n === s.t3)?.abs || false;
+    
+    db[selD] = s; 
+    localStorage.setItem('exfr_db_v53', JSON.stringify(db)); 
+    closeModal(); 
+    calculate();
+}
+
+function deleteDay() {
+    if (confirm("Διαγραφή ημέρας;")) {
+        delete db[selD];
+        localStorage.setItem('exfr_db_v53', JSON.stringify(db));
+        closeModal();
+        calculate();
+    }
+}
+
+function closeModal() { 
+    document.getElementById('modal').style.display = 'none'; 
+}
+
+function nav(v) { 
+    cur.setMonth(cur.getMonth() + v); 
+    calculate(); 
+}
+
 function exportData() {
     const data = JSON.stringify({ db, settings, repStorage });
     const fileName = `exfr_backup_${new Date().getTime()}.json`;
@@ -414,500 +1023,6 @@ function importData(e) {
     };
     reader.readAsText(file);
 }
-// --- END BACKUP ENGINE ---
-
-function fmt(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
-function getHols(y) {
-    let h = [fmt(new Date(y,0,1)), fmt(new Date(y,0,6)), fmt(new Date(y,2,25)), fmt(new Date(y,4,1)), fmt(new Date(y,7,15)), fmt(new Date(y,9,16)), fmt(new Date(y,9,28)), fmt(new Date(y,11,25)), fmt(new Date(y,11,26))];
-    let a=y%19, d_val=(19*a+15)%30, e_val=(2*(y%4)+4*(y%7)+6*d_val+6)%7;
-    let p=d_val+e_val+22+13; let m=3, day=p; if(day>31){day-=31; m=4;} if(day>30){day-=30; m=5;}
-    let easter = new Date(y, m-1, day);
-    const add = (diff) => { let tmp = new Date(easter); tmp.setDate(tmp.getDate() + diff); h.push(fmt(tmp)); };
-    add(-48); add(-2); add(-1); add(0); add(1); add(50); return h;
-}
-
-function saveSalary() { let monthKey = `sal_${cur.getFullYear()}-${cur.getMonth()}`; db[monthKey] = parseFloat(document.getElementById('salary').value) || 0; localStorage.setItem('exfr_db_v53', JSON.stringify(db)); calculate(); }
-function saveMode() { settings.mode = document.getElementById('mode-sel').value; localStorage.setItem('exfr_settings', JSON.stringify(settings)); calculate(); }
-
-// ΣΩΣΤΗ ΛΟΓΙΚΗ ΡΕΠΟ
-function savePaidHours() {
-    const paidHours = parseFloat(document.getElementById('paidHours').value) || 0;
-    const monthKey = `paid_${cur.getFullYear()}-${cur.getMonth()}`;
-    db[monthKey] = paidHours;
-    localStorage.setItem('exfr_db_v53', JSON.stringify(db));
-    
-    // Επαναϋπολογισμός
-    calculateRep();
-}
-
-// Αποθήκευση ΠΡ/ΜΗΝ
-function savePrminHours() {
-    const input = document.getElementById('prminRepRaw');
-    const display = document.getElementById('prminRepDisplay');
-    
-    const prminHours = parseFloat(input.value) || 0;
-    const monthKey = getCurrentMonthKey();
-    
-    // Αποθήκευση στο repStorage
-    repStorage.savedTransfers[monthKey] = prminHours;
-    localStorage.setItem('exfr_rep_transfer', JSON.stringify(repStorage));
-    
-    // Εμφάνιση μορφοποιημένης τιμής
-    display.textContent = formatHoursToRep(prminHours);
-    
-    // Απόκρυψη input, εμφάνιση display
-    input.style.display = 'none';
-    display.style.display = 'flex';
-    
-    // Επαναϋπολογισμός
-    calculateRep();
-}
-
-function calculateRep() {
-    const HOURS_PER_DAY = 8.5;
-    const currentMonthKey = getCurrentMonthKey();
-    
-    // 1. Πάρε τις ώρες ΠΕΡΑΝ του τρέχοντος μήνα
-    const peranHours = parseFloat(document.getElementById('m-peran').textContent) || 0;
-    
-    // 2. Πάρε τις πληρωμένες ώρες του τρέχοντος μήνα
-    const paidHours = parseFloat(document.getElementById('paidHours').value) || 0;
-    
-    // 3. ΥΠΟΛΟΓΙΣΜΟΣ ΣΥΝ/ΜΗΝ
-    const synminHours = peranHours - paidHours;
-    
-    // 4. ΠΡ/ΜΗΝ: Διάβασε από το κρυφό input
-    let prminHours = parseFloat(document.getElementById('prminRepRaw').value) || 0;
-    
-    // 5. ΥΠΟΛΟΓΙΣΜΟΣ ΜΕΤΑΦΟΡΑΣ
-    const transferHours = prminHours + synminHours;
-    
-    // 6. Ενημέρωση ΣΥΝ/ΜΗΝ
-    let synminEl = document.getElementById('synminRep');
-    synminEl.textContent = formatHoursToRep(synminHours);
-    synminEl.className = synminHours < 0 ? 'rep-display-compact negative-value' : 'rep-display-compact';
-    
-    // 7. Ενημέρωση ΠΡ/ΜΗΝ display (εφόσον δεν είναι σε λειτουργία edit)
-    let prminDisplay = document.getElementById('prminRepDisplay');
-    let prminInput = document.getElementById('prminRepRaw');
-    if (prminInput.style.display !== 'block') {
-        prminDisplay.textContent = formatHoursToRep(prminHours);
-        prminDisplay.className = prminHours < 0 ? 'rep-display-compact negative-value' : 'rep-display-compact';
-    }
-    
-    // 8. Ενημέρωση ΜΕΤΑΦΟΡΑΣ
-    let transferEl = document.getElementById('transferRep');
-    transferEl.textContent = formatHoursToRep(transferHours);
-    transferEl.className = transferHours < 0 ? 
-        'rep-display-compact rep-display-transfer negative-value' : 
-        'rep-display-compact rep-display-transfer';
-    
-    return {
-        synminHours,
-        prminHours,
-        transferHours,
-        currentMonthKey
-    };
-}
-
-function saveRepTransfer() {
-    const result = calculateRep();
-    
-    if (result.transferHours !== undefined) {
-        // Αποθήκευση της νέας μεταφοράς για τον τρέχοντα μήνα
-        repStorage.savedTransfers[result.currentMonthKey] = result.transferHours;
-        
-        // Ενημέρωση του ΠΡ/ΜΗΝ με τη νέα τιμή
-        document.getElementById('prminRepRaw').value = result.transferHours;
-        document.getElementById('prminRepDisplay').textContent = formatHoursToRep(result.transferHours);
-        
-        localStorage.setItem('exfr_rep_transfer', JSON.stringify(repStorage));
-        
-        // Επαναϋπολογισμός
-        calculateRep();
-        
-        // Μήνυμα επιτυχίας
-        showTempMessage(`✅ Αποθηκεύτηκε: ${formatHoursToRep(result.transferHours)}`, 2000);
-    }
-}
-
-function clearRepData() {
-    const currentMonthKey = getCurrentMonthKey();
-    
-    if (confirm("Εκκαθάριση πληρωμένων ωρών τρέχοντος μήνα;")) {
-        // Μηδενισμός πληρωμένων ωρών
-        document.getElementById('paidHours').value = 0;
-        savePaidHours();
-        
-        // Μηδενισμός ΠΡ/ΜΗΝ
-        document.getElementById('prminRepRaw').value = 0;
-        savePrminHours();
-        
-        // Επαναϋπολογισμός
-        calculateRep();
-        
-        showTempMessage("✅ Μηδενίστηκαν οι πληρωμένες ώρες", 2000);
-    }
-}
-
-function showTempMessage(msg, duration) {
-    const transferEl = document.getElementById('transferRep');
-    const originalText = transferEl.textContent;
-    const originalClass = transferEl.className;
-    
-    transferEl.textContent = msg;
-    transferEl.className = "rep-display-compact";
-    transferEl.style.background = "#4caf50";
-    transferEl.style.color = "white";
-    transferEl.style.borderColor = "#388e3c";
-    
-    setTimeout(() => {
-        transferEl.textContent = originalText;
-        transferEl.className = originalClass;
-        transferEl.style.background = "";
-        transferEl.style.color = "";
-        transferEl.style.borderColor = "";
-        calculateRep();
-    }, duration);
-}
-
-// ΤΕΛΟΣ ΣΩΣΤΗΣ ΛΟΓΙΚΗΣ
-
-// ΣΥΝΑΡΤΗΣΗ: Υπολογισμός πληρωμής για ΝΥΧΤΑ Α και ΝΥΧΤΑ Β
-function calculateNightPayment(shiftName, actualHours) {
-    const hr = (parseFloat(document.getElementById('salary').value) || 0) / 280;
-    
-    if (shiftName === 'ΝΥΧΤΑ Α') {
-        // Πληρώνεται μόνο για 3 ώρες νύχτας
-        return 3 * hr * 0.6;
-    } else if (shiftName === 'ΝΥΧΤΑ Β') {
-        // Πληρώνεται μόνο για 5 ώρες νύχτας
-        return 5 * hr * 0.6;
-    }
-    
-    // Για κανονική ΝΥΧΤΑ
-    return actualHours * hr * 0.6;
-}
-
-// ΣΥΝΑΡΤΗΣΗ: Υπολογισμός χρημάτων (όπως πριν)
-function recalcMoney(num) {
-    const hr = (parseFloat(document.getElementById('salary').value) || 0) / 280;
-    const h = parseFloat(document.getElementById(`c-h${num}`).value) || 0;
-    const shiftName = document.getElementById(`c-n${num}`).value;
-    
-    let payment = 0;
-    
-    // Ειδική διαχείριση για ΝΥΧΤΑ Α και ΝΥΧΤΑ Β
-    if (shiftName === 'ΝΥΧΤΑ Α') {
-        payment = calculateNightPayment('ΝΥΧΤΑ Α', h);
-    } else if (shiftName === 'ΝΥΧΤΑ Β') {
-        payment = calculateNightPayment('ΝΥΧΤΑ Β', h);
-    } else {
-        // Κανονικός υπολογισμός για όλες τις άλλες βάρδιες
-        const mult = parseFloat(document.getElementById(`c-n${num}`).dataset.mult) || 0;
-        payment = h * hr * mult;
-    }
-    
-    document.getElementById(`c-m${num}`).value = payment.toFixed(2);
-}
-
-function calculate() {
-    const y = cur.getFullYear(), m = cur.getMonth(), monthKey = `sal_${y}-${m}`;
-    const sal = db[monthKey] || settings.salary, mB = parseFloat(settings.mode), hols = getHols(y);
-    document.getElementById('salary').value = sal; document.getElementById('mode-sel').value = settings.mode;
-    document.getElementById('month-label').innerText = new Intl.DateTimeFormat('el-GR', { month: 'short', year: 'numeric' }).format(cur).toUpperCase();
-    
-    // Φόρτωση πληρωμένων ωρών για αυτόν τον μήνα
-    const paidMonthKey = `paid_${y}-${m}`;
-    document.getElementById('paidHours').value = db[paidMonthKey] || 0;
-    
-    // Φόρτωση ΠΡ/ΜΗΝ από το repStorage
-    const currentMonthKey = getCurrentMonthKey();
-    const previousMonthKey = getPreviousMonthKey();
-    
-    // Πρώτα δοκίμασε να φορτώσεις από τον τρέχοντα μήνα
-    let prminValue = 0;
-    if (repStorage.savedTransfers[currentMonthKey] !== undefined) {
-        prminValue = repStorage.savedTransfers[currentMonthKey];
-    } 
-    // Αλλιώς φόρτωσε από τον προηγούμενο μήνα (για συμβατότητα)
-    else if (repStorage.savedTransfers[previousMonthKey] !== undefined) {
-        prminValue = repStorage.savedTransfers[previousMonthKey];
-    }
-    
-    // Ορισμός τιμών στα πεδία ΠΡ/ΜΗΝ
-    document.getElementById('prminRepRaw').value = prminValue;
-    document.getElementById('prminRepDisplay').textContent = formatHoursToRep(prminValue);
-    
-    let start = (new Date(y, m, 1).getDay() + 6) % 7, days = new Date(y, m + 1, 0).getDate();
-    let tGross = 0, monthT = 0, monthUPK = 0, monthUPA = 0, totalHours = 0;
-    let weeks = Array.from({ length: 6 }, () => ({ days: [], target: 0, upk: 0, upa: 0 }));
-    
-    for (let d = 1; d <= days; d++) {
-        let dDate = new Date(y, m, d);
-        let dStr = fmt(dDate), wIdx = Math.floor((d + start - 1) / 7);
-        weeks[wIdx].days.push({ dStr, isH: hols.includes(dStr), dw: dDate.getDay(), s: db[dStr] });
-    }
-    
-    weeks.forEach(w => {
-        if (w.days.length === 0) return;
-        let holidayCount = 0;
-        let firstDay = new Date(w.days[0].dStr), diff = (firstDay.getDay() + 6) % 7;
-        let monday = new Date(firstDay); monday.setDate(firstDay.getDate() - diff);
-        
-        for (let i = 0; i < 7; i++) {
-            let tempD = new Date(monday); tempD.setDate(monday.getDate() + i);
-            if (getHols(tempD.getFullYear()).includes(fmt(tempD)) && tempD.getDay() >= 1 && tempD.getDay() <= 5) holidayCount++;
-        }
-        
-        w.target = ( (mB - (holidayCount * (mB / 5))) / 7 ) * (w.days.length - w.days.filter(d => d.s && d.s.abs).length);
-        if (w.target < 0) w.target = 0; 
-        w.upk = -w.target;
-        
-        w.days.forEach(day => {
-            if (day.s) {
-                // ΟΛΕΣ οι βάρδιες (συμπεριλαμβανομένων ΝΥΧΤΑ Α/Β) προσθέτουν τα μεικτά τους
-                tGross += (day.s.m1 || 0) + (day.s.m2 || 0) + (day.s.m3 || 0);
-                
-                // Προσθήκη ωρών στο σύνολο
-                totalHours += (day.s.h1||0) + (day.s.h2||0) + (day.s.h3||0);
-                
-                let hc = (day.s.isOT1 ? 0 : (day.s.h1||0)) + (day.s.isOT2 ? 0 : (day.s.h2||0)) + (day.s.isOT3 ? 0 : (day.s.h3||0));
-                
-                for (let i = 0; i < Math.round(hc * 10); i++) {
-                    if (w.upk < -0.01) w.upk += 0.1; 
-                    else { 
-                        if (day.dw === 0 || day.isH) w.upa += 0.1; 
-                        else w.upk += 0.1; 
-                    }
-                }
-            }
-        });
-        
-        monthT += w.target; 
-        monthUPK += w.upk; 
-        monthUPA += w.upa;
-    });
-    
-    document.getElementById('m-hours').innerText = totalHours.toFixed(1);
-    document.getElementById('m-target').innerText = monthT.toFixed(1);
-    document.getElementById('m-upk').innerText = monthUPK.toFixed(1);
-    document.getElementById('m-upa').innerText = monthUPA.toFixed(1);
-    document.getElementById('m-peran').innerText = (monthUPK + monthUPA).toFixed(1);
-    
-    // Υπολογισμός τελικών ποσών - ΤΩΡΑ περιλαμβάνει και τα μεικτά από ΝΥΧΤΑ Α/Β
-    let mtpy = tGross * 0.02;
-    let eis = tGross * 0.02;
-    let tax = (tGross - mtpy - eis) * 0.20;
-    let net = tGross - mtpy - eis - tax;
-    
-    document.getElementById('r-gross').innerText = tGross.toFixed(2) + '€';
-    document.getElementById('r-mtpy').innerText = mtpy.toFixed(2) + '€';
-    document.getElementById('r-eis').innerText = eis.toFixed(2) + '€';
-    document.getElementById('r-tax').innerText = tax.toFixed(2) + '€';
-    document.getElementById('r-net').innerText = net.toFixed(2) + '€';
-    
-    let body = document.getElementById('cal-body'); 
-    body.innerHTML = ''; 
-    let row = document.createElement('tr');
-    
-    for (let i = 0; i < start; i++) row.appendChild(document.createElement('td'));
-    
-    for (let d = 1; d <= days; d++) {
-        if (row.children.length === 7) { 
-            body.appendChild(row); 
-            row = document.createElement('tr'); 
-        }
-        
-        let dStr = fmt(new Date(y, m, d)), s = db[dStr], isH = hols.includes(dStr), dw = new Date(y, m, d).getDay();
-        let cell = document.createElement('td'); 
-        cell.onclick = () => openModal(dStr);
-        
-        if (isH) cell.className = 'holiday-cell'; 
-        else if (dw === 0) cell.className = 'sun-cell'; 
-        else if (dw === 6) cell.className = 'sat-cell';
-        
-        let tags = ''; 
-        if (s) { 
-            if(s.t1) tags+=`<div class="shift-tag">${s.t1}</div>`; 
-            if(s.t2) tags+=`<div class="shift-tag">${s.t2}</div>`; 
-            if(s.t3) tags+=`<div class="shift-tag">${s.t3}</div>`; 
-        }
-        
-        cell.innerHTML = `<span class="day-num">${d}</span>${tags}${s && s.txt ? `<div class="day-note">${s.txt}</div>` : ''}`;
-        row.appendChild(cell);
-    }
-    
-    body.appendChild(row);
-    
-    const wDiv = document.getElementById('weeks-stats'); 
-    wDiv.innerHTML = '';
-    
-    weeks.forEach((w, i) => { 
-        if (w.days.length > 0) {
-            wDiv.innerHTML += `
-                <div class="w-tile">
-                    ΕΒΔ. ${i+1}<br>
-                    ΣΤ: <span class="w-val">${w.target.toFixed(1)}</span>
-                    ΥΠΚ: <span class="w-val" style="color:var(--blue)">${w.upk.toFixed(1)}</span>
-                    ΥΠΑ: <span class="w-val" style="color:var(--red)">${w.upa.toFixed(1)}</span>
-                </div>
-            `;
-        }
-    });
-    
-    // Αυτόματος υπολογισμός ρεπό
-    calculateRep();
-}
-
-function openModal(d) {
-    activeInput = 'c-n1'; selD = d; let s = db[d] || {};
-    document.getElementById('c-n1').value = s.t1 || ''; document.getElementById('c-h1').value = s.h1 || ''; document.getElementById('c-m1').value = s.m1 || '';
-    document.getElementById('c-n2').value = s.t2 || ''; document.getElementById('c-h2').value = s.h2 || ''; document.getElementById('c-m2').value = s.m2 || '';
-    document.getElementById('c-n3').value = s.t3 || ''; document.getElementById('c-h3').value = s.h3 || ''; document.getElementById('c-m3').value = s.m3 || '';
-    document.getElementById('div-s3').style.display = s.t3 ? 'grid' : 'none';
-    document.getElementById('btn-add-3').style.display = s.t3 ? 'none' : 'block';
-    document.getElementById('c-txt').value = s.txt || ''; renderShifts();
-    document.getElementById('modal').style.display = 'block';
-}
-
-function renderShifts() {
-    const hr = (parseFloat(document.getElementById('salary').value) || 0) / 280;
-    const grid = document.getElementById('m-opts'); grid.innerHTML = '';
-    SHIFTS.forEach(o => {
-        let b = document.createElement('div'); b.className = 'm-btn';
-        
-        // ΕΠΑΝΑΦΟΡΑ: Δείχνει το ωρομίσθιο (όχι το συνολικό ποσό)
-        // Το ωρομίσθιο είναι: (βασικός μισθός / 280) * συντελεστής βάρδιας
-        let hourlyRate = (hr * o.s).toFixed(2);
-        
-        // Ειδική ετικέτα για ΝΥΧΤΑ Α και ΝΥΧΤΑ Β
-        let displayName = o.n;
-        if (o.n === 'ΝΥΧΤΑ Α') {
-            displayName = 'ΝΥΧΤΑ Α (3ω πληρ.)';
-        } else if (o.n === 'ΝΥΧΤΑ Β') {
-            displayName = 'ΝΥΧΤΑ Β (5ω πληρ.)';
-        }
-        
-        b.innerHTML = `<span>${displayName}</span> <span style="color:var(--red)">${hourlyRate > 0 ? hourlyRate + '€' : ''}</span>`;
-        b.onclick = () => {
-            let t = activeInput; 
-            let nameInput = document.getElementById(t);
-            nameInput.value = o.n; 
-            
-            // Ορισμός των προτεινόμενων ωρών (6 για όλες τις βάρδιες)
-            document.getElementById(t.replace('n', 'h')).value = o.h;
-            
-            nameInput.dataset.mult = o.s;
-            nameInput.dataset.isot = o.isOT ? "1" : "0";
-            
-            recalcMoney(t.slice(-1));
-            activeInput = (t === 'c-n1') ? 'c-n2' : (t === 'c-n2' && document.getElementById('div-s3').style.display==='grid' ? 'c-n3' : 'c-n1');
-        }; grid.appendChild(b);
-    });
-}
-
-function save() {
-    const hr = (parseFloat(document.getElementById('salary').value) || 0) / 280;
-    
-    // Λήψη τιμών από τα πεδία εισόδου
-    const t1 = document.getElementById('c-n1').value;
-    const h1 = parseFloat(document.getElementById('c-h1').value) || 0;
-    const t2 = document.getElementById('c-n2').value;
-    const h2 = parseFloat(document.getElementById('c-h2').value) || 0;
-    const t3 = document.getElementById('c-n3').value;
-    const h3 = parseFloat(document.getElementById('c-h3').value) || 0;
-    const txt = document.getElementById('c-txt').value;
-    
-    // Υπολογισμός πληρωμής για κάθε βάρδια
-    let m1 = 0, m2 = 0, m3 = 0;
-    
-    // Βάρδια 1
-    if (t1 === 'ΝΥΧΤΑ Α') {
-        m1 = calculateNightPayment('ΝΥΧΤΑ Α', h1);
-    } else if (t1 === 'ΝΥΧΤΑ Β') {
-        m1 = calculateNightPayment('ΝΥΧΤΑ Β', h1);
-    } else if (t1) {
-        const shift1 = SHIFTS.find(s => s.n === t1);
-        if (shift1) {
-            m1 = h1 * hr * shift1.s;
-        }
-    }
-    
-    // Βάρδια 2
-    if (t2 === 'ΝΥΧΤΑ Α') {
-        m2 = calculateNightPayment('ΝΥΧΤΑ Α', h2);
-    } else if (t2 === 'ΝΥΧΤΑ Β') {
-        m2 = calculateNightPayment('ΝΥΧΤΑ Β', h2);
-    } else if (t2) {
-        const shift2 = SHIFTS.find(s => s.n === t2);
-        if (shift2) {
-            m2 = h2 * hr * shift2.s;
-        }
-    }
-    
-    // Βάρδια 3
-    if (t3 === 'ΝΥΧΤΑ Α') {
-        m3 = calculateNightPayment('ΝΥΧΤΑ Α', h3);
-    } else if (t3 === 'ΝΥΧΤΑ Β') {
-        m3 = calculateNightPayment('ΝΥΧΤΑ Β', h3);
-    } else if (t3) {
-        const shift3 = SHIFTS.find(s => s.n === t3);
-        if (shift3) {
-            m3 = h3 * hr * shift3.s;
-        }
-    }
-    
-    // Δημιουργία αντικειμένου βάρδιας
-    const s = {
-        t1: t1,
-        h1: h1,
-        m1: parseFloat(m1.toFixed(2)),
-        isOT1: SHIFTS.find(x => x.n === t1)?.isOT || false,
-        
-        t2: t2,
-        h2: h2,
-        m2: parseFloat(m2.toFixed(2)),
-        isOT2: SHIFTS.find(x => x.n === t2)?.isOT || false,
-        
-        t3: t3,
-        h3: h3,
-        m3: parseFloat(m3.toFixed(2)),
-        isOT3: SHIFTS.find(x => x.n === t3)?.isOT || false,
-        
-        txt: txt
-    };
-    
-    // Έλεγχος για απουσία
-    const shift1 = SHIFTS.find(x => x.n === s.t1);
-    const shift2 = SHIFTS.find(x => x.n === s.t2);
-    const shift3 = SHIFTS.find(x => x.n === s.t3);
-    
-    s.abs = shift1?.abs || shift2?.abs || shift3?.abs || false;
-    
-    // Αποθήκευση στη βάση δεδομένων
-    db[selD] = s; 
-    localStorage.setItem('exfr_db_v53', JSON.stringify(db)); 
-    closeModal(); 
-    calculate();
-}
-
-function del() { 
-    delete db[selD]; 
-    localStorage.setItem('exfr_db_v53', JSON.stringify(db)); 
-    closeModal(); 
-    calculate(); 
-}
-
-function closeModal() { 
-    document.getElementById('modal').style.display = 'none'; 
-    selD = '';  // Εκκαθάριση της επιλεγμένης ημερομηνίας
-}
-
-function nav(v) { 
-    cur.setMonth(cur.getMonth() + v); 
-    calculate(); 
-}
 
 // Αρχικοποίηση
 document.addEventListener('DOMContentLoaded', function() {
@@ -925,7 +1040,6 @@ document.addEventListener('DOMContentLoaded', function() {
         repStorage = {"savedTransfers": {}};
     }
     
-    // Αυτόματος υπολογισμός στην έναρξη
     setTimeout(function() {
         calculate();
     }, 100);
